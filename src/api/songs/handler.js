@@ -1,5 +1,3 @@
-const ClientError = require('../../exceptions/ClientError');
-
 const responses = require('../../utils/responses');
 
 class SongsHandler {
@@ -27,12 +25,7 @@ class SongsHandler {
 
       return responses.sendSuccessResponse(h, { song });
     } catch (error) {
-      if (error instanceof ClientError) {
-        return responses.sendFailedResponse(h, 'fail', error.statusCode, error.message);
-      }
-
-      console.error(error);
-      return responses.internalServerError(h);
+      return error;
     }
   }
 
@@ -49,12 +42,7 @@ class SongsHandler {
 
       return responses.sendSuccessResponse(h, { songId }, 201, 'Lagu berhasil ditambahkan');
     } catch (error) {
-      if (error instanceof ClientError) {
-        return responses.sendFailedResponse(h, 'fail', error.statusCode, error.message);
-      }
-
-      console.error(error);
-      return responses.internalServerError(h);
+      return error;
     }
   }
 
@@ -72,12 +60,7 @@ class SongsHandler {
 
       return responses.sendSuccessResponse(h, null, 200, 'Lagu berhasil diperbarui');
     } catch (error) {
-      if (error instanceof ClientError) {
-        return responses.sendFailedResponse(h, 'fail', error.statusCode, error.message);
-      }
-
-      console.error(error);
-      return responses.internalServerError(h);
+      return error;
     }
   }
 
@@ -88,12 +71,7 @@ class SongsHandler {
 
       return responses.sendSuccessResponse(h, null, 200, 'Lagu berhasil dihapus');
     } catch (error) {
-      if (error instanceof ClientError) {
-        return responses.sendFailedResponse(h, 'fail', error.statusCode, error.message);
-      }
-
-      console.error(error);
-      return responses.internalServerError(h);
+      return error;
     }
   }
 }
