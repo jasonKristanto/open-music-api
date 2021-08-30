@@ -2,8 +2,9 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 
 const bcrypt = require('bcrypt');
-const InvariantError = require('../../exceptions/InvariantError');
-const NotFoundError = require('../../exceptions/NotFoundError');
+const AuthError = require('../../exceptions/auth-error');
+const InvariantError = require('../../exceptions/invariant-error');
+const NotFoundError = require('../../exceptions/not-found-error');
 
 class UsersService {
   constructor() {
@@ -16,12 +17,10 @@ class UsersService {
     const id = `user-${nanoid(16)}`;
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const query = {
+    const result = await this.pool.query({
       text: 'INSERT INTO users VALUES($1, $2, $3, $4) RETURNING id',
       values: [id, username, hashedPassword, fullname],
-    };
-
-    const result = await this.pool.query(query);
+    });
 
     if (!result.rowCount) {
       throw new InvariantError('User gagal ditambahkan');
@@ -31,12 +30,10 @@ class UsersService {
   }
 
   async verifyNewUsername(username) {
-    const query = {
+    const result = await this.pool.query({
       text: 'SELECT username FROM users WHERE username = $1',
       values: [username],
-    };
-
-    const result = await this.pool.query(query);
+    });
 
     if (result.rowCount > 0) {
       throw new InvariantError('Gagal menambahkan user. Username sudah digunakan.');
@@ -44,18 +41,36 @@ class UsersService {
   }
 
   async getUserById(userId) {
-    const query = {
+    const result = await this.pool.query({
       text: 'SELECT id, username, fullname FROM users WHERE id = $1',
       values: [userId],
-    };
-
-    const result = await this.pool.query(query);
+    });
 
     if (!result.rowCount) {
       throw new NotFoundError('User tidak ditemukan');
     }
 
     return result.rows[0];
+  }
+
+  async verifyUserCredential(username, password) {
+    const result = await this.pool.query({
+      text: 'SELECT id, password FROM users WHERE username = $1',
+      values: [username],
+    });
+
+    if (!result.rowCount > 0) {
+      throw new AuthError('Kredensial yang Anda berikan salah');
+    }
+
+    const { id, password: hashedPassword } = result.rows[0];
+    const match = await bcrypt.compare(password, hashedPassword);
+
+    if (!match) {
+      throw new AuthError('Kredensial yang Anda berikan salah');
+    }
+
+    return id;
   }
 }
 
