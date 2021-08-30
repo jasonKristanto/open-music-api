@@ -14,6 +14,11 @@ const songs = require('./api/songs');
 const SongsService = require('./services/postgres/songs-service');
 const SongsValidator = require('./validator/songs');
 
+// playlists
+const playlists = require('./api/playlists');
+const PlaylistsService = require('./services/postgres/playlists-service');
+const PlaylistsValidator = require('./validator/playlists');
+
 // users
 const users = require('./api/users');
 const UsersService = require('./services/postgres/users-service');
@@ -27,6 +32,7 @@ const AuthenticationsValidator = require('./validator/auths');
 
 const init = async () => {
   const songsService = new SongsService();
+  const playlistsService = new PlaylistsService();
   const usersService = new UsersService();
   const authenticationsService = new AuthenticationsService();
 
@@ -71,6 +77,13 @@ const init = async () => {
       },
     },
     {
+      plugin: playlists,
+      options: {
+        service: playlistsService,
+        validator: PlaylistsValidator,
+      },
+    },
+    {
       plugin: users,
       options: {
         service: usersService,
@@ -91,12 +104,16 @@ const init = async () => {
   server.ext('onPreResponse', (request, h) => {
     const { response } = request;
 
-    if (response instanceof Error) {
-      if (response instanceof ClientError) {
-        return responses.sendFailedResponse(h, 'fail', response.statusCode, response.message);
-      }
+    if (response instanceof ClientError) {
+      return responses.sendFailedResponse(h, 'fail', response.statusCode, response.message);
+    }
 
-      return responses.internalServerError(h);
+    if (response instanceof Error) {
+      const { statusCode } = response.output;
+
+      if (statusCode === 500) {
+        return responses.internalServerError(h);
+      }
     }
 
     return response.continue || response;

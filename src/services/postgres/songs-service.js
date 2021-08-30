@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
-const { mapSongsTableToModel, mapSongTableToModel } = require('../../utils/models');
+const { mapSongsTableToModel, mapSongTableToModel } = require('../../utils/models/songs');
 
 const InvariantError = require('../../exceptions/invariant-error');
 const NotFoundError = require('../../exceptions/not-found-error');

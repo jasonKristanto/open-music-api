@@ -2,7 +2,8 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 
 const bcrypt = require('bcrypt');
-const AuthError = require('../../exceptions/auth-error');
+
+const AuthenticationsError = require('../../exceptions/authentications-error');
 const InvariantError = require('../../exceptions/invariant-error');
 const NotFoundError = require('../../exceptions/not-found-error');
 
@@ -60,14 +61,14 @@ class UsersService {
     });
 
     if (!result.rowCount > 0) {
-      throw new AuthError('Kredensial yang Anda berikan salah');
+      throw new AuthenticationsError('Kredensial yang Anda berikan salah');
     }
 
     const { id, password: hashedPassword } = result.rows[0];
     const match = await bcrypt.compare(password, hashedPassword);
 
     if (!match) {
-      throw new AuthError('Kredensial yang Anda berikan salah');
+      throw new AuthenticationsError('Kredensial yang Anda berikan salah');
     }
 
     return id;
