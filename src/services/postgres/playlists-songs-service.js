@@ -2,7 +2,6 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const { mapSongsTableToModel } = require('../../utils/models/songs');
 
-const AuthorizationError = require('../../exceptions/authorizations-error');
 const InvariantError = require('../../exceptions/invariant-error');
 const NotFoundError = require('../../exceptions/not-found-error');
 
@@ -48,23 +47,6 @@ class PlaylistsSongsService {
 
     if (!result.rowCount) {
       throw new InvariantError('Lagu di dalam playlist gagal dihapus. Id tidak ditemukan');
-    }
-  }
-
-  async verifyPlaylistOwner(id, owner) {
-    const result = await this.pool.query({
-      text: 'SELECT * FROM playlists WHERE id = $1',
-      values: [id],
-    });
-
-    if (!result.rowCount) {
-      throw new NotFoundError('Playlist tidak ditemukan');
-    }
-
-    const playlist = result.rows[0];
-
-    if (playlist.owner !== owner) {
-      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
     }
   }
 }
