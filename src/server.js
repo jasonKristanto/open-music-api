@@ -40,7 +40,7 @@ const TokenManager = require('./tokenize/token-manager');
 const AuthenticationsValidator = require('./validator/auths');
 
 // exports
-const exports = require('./api/exports');
+const exportsPlugin = require('./api/exports');
 const ProducerService = require('./services/rabbitmq/producer-service');
 const ExportsValidator = require('./validator/exports');
 
@@ -127,7 +127,7 @@ const init = async () => {
       },
     },
     {
-      plugin: exports,
+      plugin: exportsPlugin,
       options: {
         exportsService: ProducerService,
         playlistService: playlistsService,
