@@ -1,12 +1,20 @@
 const responses = require('../../utils/responses');
 
 class PlaylistsHandler {
-  constructor(playlistService, playlistValidator, playlistsSongsService, playlistsSongsValidator) {
+  constructor(
+    playlistService,
+    playlistValidator,
+    playlistsSongsService,
+    playlistsSongsValidator,
+    cacheService,
+  ) {
     this.playlistService = playlistService;
     this.playlistValidator = playlistValidator;
 
     this.playlistsSongsService = playlistsSongsService;
     this.playlistsSongsValidator = playlistsSongsValidator;
+
+    this.cacheService = cacheService;
 
     this.getPlaylistsHandler = this.getPlaylistsHandler.bind(this);
     this.postPlaylistHandler = this.postPlaylistHandler.bind(this);
@@ -48,6 +56,8 @@ class PlaylistsHandler {
 
     await this.playlistService.deletePlaylistById(id);
 
+    await this.cacheService.delete(`${process.env.CACHE_PLAYLISTS_PREFIX}:${id}:${credentialId}`);
+
     return responses.sendSuccessResponse(h, null, 200, 'Playlist berhasil dihapus');
   }
 
@@ -65,6 +75,8 @@ class PlaylistsHandler {
       { playlistId, songId },
     );
 
+    await this.cacheService.delete(`${process.env.CACHE_PLAYLISTS_PREFIX}:${playlistId}:${credentialId}`);
+
     return responses.sendSuccessResponse(
       h,
       null,
@@ -80,7 +92,14 @@ class PlaylistsHandler {
     await this.playlistService.verifyPlaylistExist(playlistId);
     await this.playlistService.verifyPlaylistAccess(playlistId, credentialId);
 
+    const songsCache = await this.cacheService.getCache(`${process.env.CACHE_PLAYLISTS_PREFIX}:${playlistId}:${credentialId}`);
+    if (songsCache) {
+      return responses.sendSuccessResponse(h, { songs: songsCache });
+    }
+
     const songs = await this.playlistsSongsService.getSongsFromPlaylistId({ playlistId });
+
+    await this.cacheService.set(`${process.env.CACHE_PLAYLISTS_PREFIX}:${playlistId}:${credentialId}`, JSON.stringify(songs));
 
     return responses.sendSuccessResponse(h, { songs });
   }
@@ -94,6 +113,8 @@ class PlaylistsHandler {
     await this.playlistService.verifyPlaylistAccess(playlistId, credentialId);
 
     await this.playlistsSongsService.deleteSongFromPlaylist({ playlistId, songId });
+
+    await this.cacheService.delete(`${process.env.CACHE_PLAYLISTS_PREFIX}:${playlistId}:${credentialId}`);
 
     return responses.sendSuccessResponse(
       h,

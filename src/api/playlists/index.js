@@ -11,6 +11,7 @@ module.exports = {
       playlistsValidator,
       playlistsSongsService,
       playlistsSongsValidator,
+      cacheService,
     },
   ) => {
     const playlistsHandler = new PlaylistsHandler(
@@ -18,6 +19,7 @@ module.exports = {
       playlistsValidator,
       playlistsSongsService,
       playlistsSongsValidator,
+      cacheService,
     );
 
     server.route(routes(playlistsHandler));
